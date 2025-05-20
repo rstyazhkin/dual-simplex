@@ -133,9 +133,38 @@ class Simplex():
     def _iterate(self, tableau):
         entering, leaving, pivot_element = self._define_pivot(self.B, tableau)
         B_new = self.B.copy()
-        B_new[B_new.index(leaving)] = entering
-        Cb = np.array([self.function_row[x] for x in B_new], dtype=float)
-        # пересчитываем таблицу по правилу прямоугольника...
+        leaving_idx = B_new.index(leaving)
+        B_new[leaving_idx] = entering
+        self.B = B_new  # обновляем базис
+
+        # Шаг 1: Нормализуем ведущую строку
+        new_tableau = tableau.copy()
+        pivot_row_index = leaving_idx
+        pivot_column_index = entering
+
+        new_tableau[pivot_row_index] = new_tableau[pivot_row_index] / pivot_element
+
+        # Шаг 2: Обнуляем все остальные элементы в ведущем столбце (кроме ведущей строки)
+        for i in range(len(new_tableau)):
+            if i != pivot_row_index:
+                factor = new_tableau[i, pivot_column_index]
+                new_tableau[i] = new_tableau[i] - factor * new_tableau[pivot_row_index]
+
+        # Шаг 3: Обновляем строку z
+        Cb = np.array([self.function_row[x] for x in self.B], dtype=float)
+        variable_rows = new_tableau[:-1, :]
+        z_row = (Cb @ variable_rows - self.function_row).tolist()
+        new_tableau[-1, :] = z_row
+        self.func_val = Cb @ self.P
+
+        # Обновляем таблицу
+        self.tableu = new_tableau
+
+        print("\nПосле итерации симплекс-таблица:")
+        for row in self.tableu:
+            print(" ".join(f"{x:^12.2f}" for x in row))
+        print(f"Текущий базис: {[x + 1 for x in self.B]}")
+
         
     
     def solve(self):
