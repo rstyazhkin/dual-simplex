@@ -135,48 +135,53 @@ class Simplex():
         B_new = self.B.copy()
         leaving_idx = B_new.index(leaving)
         B_new[leaving_idx] = entering
-        self.B = B_new  # обновляем базис
+        self.B = B_new
 
-        # Шаг 1: Нормализуем ведущую строку
-        new_tableau = tableau.copy()
         pivot_row_index = leaving_idx
         pivot_column_index = entering
 
-        new_tableau[pivot_row_index] = new_tableau[pivot_row_index] / pivot_element
+        new_tableau = tableau.copy()
+        new_P = self.P.copy()
 
-        # Шаг 2: Обнуляем все остальные элементы в ведущем столбце (кроме ведущей строки)
-        for i in range(len(new_tableau)):
+        new_tableau[pivot_row_index] = new_tableau[pivot_row_index] / pivot_element
+        new_P[pivot_row_index] = new_P[pivot_row_index] / pivot_element
+
+        for i in range(len(new_tableau) - 1):
             if i != pivot_row_index:
                 factor = new_tableau[i, pivot_column_index]
                 new_tableau[i] = new_tableau[i] - factor * new_tableau[pivot_row_index]
+                new_P[i] = new_P[i] - factor * new_P[pivot_row_index]
 
-        # Шаг 3: Обновляем строку z
+
         Cb = np.array([self.function_row[x] for x in self.B], dtype=float)
         variable_rows = new_tableau[:-1, :]
         z_row = (Cb @ variable_rows - self.function_row).tolist()
         new_tableau[-1, :] = z_row
-        self.func_val = Cb @ self.P
+        self.func_val = Cb @ new_P
 
-        # Обновляем таблицу
         self.tableu = new_tableau
+        self.P = new_P
 
         print("\nПосле итерации симплекс-таблица:")
         for row in self.tableu:
             print(" ".join(f"{x:^12.2f}" for x in row))
+        print("P: ", np.round(self.P, 3))
         print(f"Текущий базис: {[x + 1 for x in self.B]}")
+        print(f"Текущее значение функции: {np.round(self.func_val, 3)}")
 
-        
-    
     def solve(self):
         # Приведение задачи к каноническому виду
         # Инициализация симплекс таблицы
         self._initialize_table()
         
         # Итерационный процесс
-        # while not self._is_solved():
-        #     solution = self._iterate()
-        self._iterate(self.tableu)
-        # print("Решение найдено:")
+        while not self._is_solved(self.tableu):
+            self._iterate(self.tableu)
+        # self._iterate(self.tableu)
+        print("Решение найдено!")
+        for i, var in enumerate(self.B):
+            print(f"x{var + 1} = {self.P[i]}")
+        print(f"Оптимальное значение функции: {self.func_val}")
         
     
 if __name__ == "__main__":
