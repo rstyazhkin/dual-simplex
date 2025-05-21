@@ -1,0 +1,9 @@
+function coefficients
+5 4
+restriction coefficients
+6 4
+1 2
+restriction signs
+>= <=
+restriction right-side values
+24 6

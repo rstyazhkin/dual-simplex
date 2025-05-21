@@ -26,9 +26,7 @@ class Simplex():
                 elif signs[i] == 2:
                     signs[i] = 1
 
-        print(P)
         slack_num, artificial_num = self._count_additional_variables()
-        print(slack_num, artificial_num)
         artificial_idx = slack_idx + slack_num
         
         variable_rows = [list(row) + [0]*(slack_num + artificial_num) for row in A]
@@ -123,7 +121,6 @@ class Simplex():
         self.tableu = new_tableau
         self.P = new_P
 
-        print("\nПосле итерации симплекс-таблица:")
         for row in self.tableu:
             print(" ".join(f"{x:^12.2f}" for x in row))
         print("P:", np.round(self.P, 3))
@@ -132,22 +129,24 @@ class Simplex():
 
     def solve(self):
         self._initialize_table()
+        iteration = 1
         while not self._is_solved(self.tableu):
+            print()
+            print(f"Итерация {iteration}")
             self._iterate(self.tableu)
+            iteration += 1
 
         print("\nРешение найдено!")
-        solution = []
-        varz = set(range(self.var_num))
-        basis = set(self.B)
-        found_vars = list(varz & basis)
-        print(found_vars)
-        for var in range(self.var_num):
-            if var not in found_vars:
-                print(f"x{var} = 0")
-            else:
-                print(f"x{var + 1} = {round(self.P[self.B.index(var)], 2)}")
-        
-        print(f"Оптимальное значение функции: {self.func_val:.3f}")
+        solution = [0] * self.var_num
+        for i, b in enumerate(self.B):
+            if b < self.var_num:
+                solution[b] = round(self.P[i], 6)
+
+        for idx, val in enumerate(solution):
+            print(f"x{idx + 1} = {val}")
+
+        print(f"Оптимальное значение функции: {round(self.func_val, 6)}")
+
 
 def parse_input_file(filename="input.txt"):
     with open(filename, "r") as f:
