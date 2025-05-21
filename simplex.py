@@ -149,14 +149,43 @@ class Simplex():
         
         print(f"Оптимальное значение функции: {self.func_val:.3f}")
 
+def parse_input_file(filename="input.txt"):
+    with open(filename, "r") as f:
+        lines = [line.strip() for line in f if line.strip()]
+
+    section = None
+    c = []
+    A = []
+    signs = []
+    P = []
+
+    for line in lines:
+        lower = line.lower()
+        if "function coefficients" in lower:
+            section = "function"
+        elif "restriction coefficients" in lower:
+            section = "restrictions"
+        elif "restriction signs" in lower:
+            section = "signs"
+        elif "restriction right-side values" in lower:
+            section = "rhs"
+        else:
+            nums = line.split()
+            if section == "function":
+                c = list(map(float, nums))
+            elif section == "restrictions":
+                A.append(list(map(float, nums)))
+            elif section == "signs":
+                # Преобразуем знаки в: <= → 1, >= → 2, = → 3
+                mapping = {"<=": 1, ">=": 2, "=": 3}
+                signs = [mapping[s] for s in nums]
+            elif section == "rhs":
+                P = list(map(float, nums))
+
+    return A, P, c, signs
+
 # Пример использования
 if __name__ == "__main__":
-    A = [
-        [1, 10, -5],
-        [7, 16, 3]
-    ]
-    P = [-10, 30] 
-    c = [1, 5, 2]
-    signs = [2, 1]
+    A, P, c, signs = parse_input_file()
     simplex = Simplex(A, P, c, signs)
     simplex.solve()
